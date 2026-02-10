@@ -30,13 +30,16 @@ body
 	display:block;
 }
 
+
 #kofi {
     position: fixed;
     font-family:'Courier';
     color:black;
     font-size: 150px;
-    left: 5%;
-    bottom: 5%;
+	display:flex;
+	justify-content: center;
+    bottom: 8%;
+	width: 100%;
 }
 
 #kofi1 {
