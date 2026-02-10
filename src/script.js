@@ -483,32 +483,37 @@ window.addEventListener('keydown', (event) =>
             function (geometry) {   
                 // orient object
                 
-                geometry.rotateX(Math.PI / 2)
-                geometry.rotateX(Math.PI)                
-                if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush')
+                if (objects[curObjectPathInd] == '/models/Banana/banana')
                 {
-                    geometry.scale(0.02, 0.02, 0.02)
+                    geometry.scale(0.01, 0.01, 0.01)
+                    geometry.rotateZ(Math.PI / 2)
+                    geometry.rotateZ(Math.PI)
                 }
-                // if (objects[curObjectPathInd] == '/models/Banana/banana')
-                //     {
-                //         geometry.scale(0.015, 0.015, 0.015)
-                //     }    
                 else
                 {
-                    geometry.scale(0.03, 0.03, 0.03)
+                    geometry.rotateX(Math.PI / 2)
+                    geometry.rotateX(Math.PI)
+                    if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush')
+                    {
+                        geometry.scale(0.02, 0.02, 0.02)
+                    }
+                    else
+                    {
+                        geometry.scale(0.03, 0.03, 0.03)
+                    }
                 }
 
                 const loadedMesh = new THREE.Mesh(geometry, material)
-                if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush'
+                if (objects[curObjectPathInd] == '/models/Banana/banana')
+                {
+                    loadedMesh.position.x = -1
+                    loadedMesh.position.z = 0
+                }
+                else if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush'
                  || objects[curObjectPathInd] == '/models/Grape/grape')
                 {
                     loadedMesh.position.z = 1.2
                 }
-                // if (objects[curObjectPathInd] == '/models/Banana/banana')
-                //     {
-                //         loadedMesh.position.x = -1
-                //         loadedMesh.position.z = 0
-                //     }  
                 else
                 {
                     loadedMesh.position.z = 0.5
