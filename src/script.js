@@ -9,28 +9,6 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 // debug ui
 const gui = new dat.GUI()
 
-// Requiring fs module in which
-// writeFile function is defined.
-// //const fs = require('fs')
-    
-// Data which will write in a file.
-// let data = "Learning how to write in a file."
-    
-// // Write data in 'Output.txt' .
-// fs.writeFile('Output.txt', data, (err) => {
-        
-//     // In case of a error throw err.
-//     if (err) throw err;
-// })
-
-// const fsm = require('fs-minipass')
-// //const readStream = new fsm.ReadStream('file.txt')
-// const writeStream = new fsm.WriteStream('output.txt')
-// writeStream.write('some file header or whatever\n')
-
-
-
-
 // textures
 const textureLoader = new THREE.TextureLoader()
 const cubeTextureLoader = new THREE.CubeTextureLoader()
@@ -58,7 +36,6 @@ const environmentMapTexture = cubeTextureLoader.load([
     '/textures/environmentMaps/0/nz.jpg'
 ])
 
-
 /**
  * Base
  */
@@ -69,91 +46,10 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 const idleScene = new THREE.Scene()
 
-
-
-
-// Materials
-
-// basic material
-// const material = new THREE.MeshBasicMaterial()
-// material.map = doorColorTexture
-// material.color.set('#ff9f82')
-// material.wireframe = true
-// material.opacity = 0.5
-// material.transparent = true
-// material.alphaMap = doorAlphaTexture
-// material.side = THREE.DoubleSide
-
 //normal material
 const material = new THREE.MeshNormalMaterial()
 //material.wireframe = true
 material.flatShading = true
-
-// matcap material
-// const material = new THREE.MeshMatcapMaterial()
-// material.matcap = matcapTexture
-
-// depth material
-// const material = new THREE.MeshDepthMaterial()
-
-// lambert material
-// const material = new THREE.MeshLambertMaterial()
-
-// blinn phong material
-// const material = new THREE.MeshPhongMaterial()
-// material. shininess = 100
-// material.specular = new THREE.Color('0xffff00')
-
-// cartoony material
-// const material = new THREE.MeshToonMaterial()
-// material.gradientMap = gradientTexture
-
-// standard material
-// const material = new THREE.MeshStandardMaterial()
-// material.metalness = 0.7
-// material.roughness = 0.2
-// material.map = doorColorTexture
-// material.aoMap = doorAmbientOcclusionTexture
-// material.aoMapIntensity = 1
-// material.displacementMap = doorHeightTexture
-// material.displacementScale = 0.1
-// material.metalnessMap = doorMetalnessTexture
-// material.roughnessMap = doorRoughnessTexture
-// material.normalMap = doorNormalTexture
-// material.normalScale.set(0.5, 0.5)
-// material.alphaMap = doorAlphaTexture
-// material.transparent = true
-
-// adding envirinment map
-//material.envMap = environmentMapTexture
-
-//gui.add(material, 'metalness').min(0).max(1).step(0.0001)
-//gui.add(material, 'roughness').min(0).max(1).step(0.0001)
-//gui.add(material, 'aoMapIntensity').min(0).max(10).step(0.0001)
-//gui.add(material, 'displacementScale').min(0).max(10).step(0.0001)
-
-// Geometries
-// const sphere = new THREE.Mesh(
-//     new THREE.SphereGeometry(0.5, 64, 64),
-//     material
-// )
-// sphere.position.x = -1.5
-// sphere.geometry.setAttribute(
-//     'uv2', 
-//     new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2)
-// )
-
-// const torus = new THREE.Mesh(
-//     new THREE.TorusGeometry(0.3, 0.2, 164, 128),
-//     material
-// )
-// torus.position.x = 1.5
-// torus.geometry.setAttribute(
-//     'uv2', 
-//     new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2)
-// )
-
-
 
 const body = document.querySelector('body')
 window.addEventListener('dblclick', () =>
@@ -206,105 +102,13 @@ window.addEventListener('keydown', (event) =>
                 objects[curObjectPathInd] + resolutionIndex + '.stl',
                 
                 function (geometry) { 
-                    // console.log(curObjectPathInd)
-                    // geometry.scale(0.03, 0.03, 0.03)
-                    // geometry.rotateX(Math.PI / 2)
-                    // geometry.rotateX(Math.PI)
                     
-                    // // orientate the object
-                    // const loadedMesh = new THREE.Mesh(geometry, material)
-                    // loadedMesh.position.z = 0.5
-                    // switch(curObjectPathInd)
-                    // {
-                    //     case 0:
-                    //         geometry.scale(0.015, 0.015, 0.015)
-                    //         geometry.rotateZ(Math.PI / 2)
-                    //         geometry.rotateZ(Math.PI)
-                            
-                    //     case 1:
-                    //         geometry.scale(0.025, 0.025, 0.025)
-                    //         geometry.rotateX(Math.PI / 2)
-                    //         geometry.rotateX(Math.PI)
-                            
-                    //     case 2:
-                    //         geometry.scale(0.03, 0.03, 0.03)
-                    //         geometry.rotateX(Math.PI / 2)
-                    //         geometry.rotateX(Math.PI)
-                            
-                    //     case 3:
-                    //         geometry.scale(0.025, 0.025, 0.025)
-                    //         geometry.rotateX(Math.PI / 2)
-                    //         geometry.rotateX(Math.PI)
-                            
-                    //     case 4:
-                    //         geometry.scale(0.03, 0.03, 0.03)
-                    //         geometry.rotateX(Math.PI / 2)
-                    //         geometry.rotateX(Math.PI)
-                    // }        
-                    // const loadedMesh = new THREE.Mesh(geometry, material)     
-                    // switch(curObjectPathInd)
-                    // {
-                    //     case 0:
-                            
-                    //         loadedMesh.position.z = 0
-                    //         loadedMesh.position.x = -1
-                    //     case 1:
-                            
-                    //         loadedMesh.position.z = 1.2
-                    //     case 2:
-                            
-                    //         loadedMesh.position.z = 0.5
-                    //     case 3:
-                           
-                    //         loadedMesh.position.z = 1.2
-                    //     case 4:
-                            
-                    //         loadedMesh.position.z = 1.2
-
-
-                    // }
-                    // geometry.scale(0.025, 0.025, 0.025)
-                    // geometry.rotateX(Math.PI / 2)
-                    // geometry.rotateX(Math.PI)
-                    // if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush')
-                    // {
-                    //     geometry.scale(0.025, 0.025, 0.025)
-                    // }
-                    // if (objects[curObjectPathInd] == '/models/Banana/banana')
-                    // {
-                    //     geometry.scale(0.015, 0.015, 0.015)
-                    // }                        
-                    // else
-                    // {
-                    //     geometry.scale(0.03, 0.03, 0.03)
-                    // }
-
-                    // orientate the object
-                    // const loadedMesh = new THREE.Mesh(geometry, material)
-                    // if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush'
-                    // || objects[curObjectPathInd] == '/models/Grape/grape')
-                    // {
-                    //     loadedMesh.position.z = 1.2
-                    // }
-                    // else if (objects[curObjectPathInd] == '/models/Banana/banana')
-                    // {
-                    //     loadedMesh.position.x = -1
-                    //     loadedMesh.position.z = 0
-                    // }    
-                    // else
-                    // {
-                    //     loadedMesh.position.z = 0.5
-                    // }              
                     geometry.rotateX(Math.PI / 2)
                     geometry.rotateX(Math.PI)                
                     if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush')
                     {
                         geometry.scale(0.02, 0.02, 0.02)
                     }
-                    // if (objects[curObjectPathInd] == '/models/Banana/banana')
-                    //     {
-                    //         geometry.scale(0.015, 0.015, 0.015)
-                    //     }    
                     else
                     {
                         geometry.scale(0.03, 0.03, 0.03)
@@ -316,11 +120,6 @@ window.addEventListener('keydown', (event) =>
                     {
                         loadedMesh.position.z = 1.2
                     }
-                    // if (objects[curObjectPathInd] == '/models/Banana/banana')
-                    //     {
-                    //         loadedMesh.position.x = -1
-                    //         loadedMesh.position.z = 0
-                    //     }  
                     else
                     {
                         loadedMesh.position.z = 0.5
@@ -537,18 +336,6 @@ window.addEventListener('keydown', (event) =>
     }
 })
 
-
-
-// lights
-// const ambientLight= new THREE.AmbientLight(0xffffff, 0.5)
-// scene.add(ambientLight)
-
-// const pointLight = new THREE.PointLight(0xffffff, 0.5)
-// pointLight.position.x = 2
-// pointLight.position.y = 3
-// pointLight.position.z = 4
-// scene.add(pointLight)
-
 /**
  * Sizes
  */
@@ -753,30 +540,12 @@ const tick = () =>
     const elapsedTime = clock.getElapsedTime()
 
     // Update camera
-    // camera.position.x = Math.sin(arrowControls.x) * 2.5 
-    // camera.position.y = Math.cos(arrowControls.y) * 2.5 * Math.sin((elapsedTime/2))
-    // camera.position.z = Math.cos(arrowControls.x) * 2.5
-    //camera.position.y = cursor.y * 3
     camera.lookAt(0, 0, 0)
 
     objectA.rotation.y = 0.3 * elapsedTime
 
-    // Update objects rotation
-    // sphere.rotation.y = 0.1 * elapsedTime
-    // // plane.rotation.y = -0.1 * elapsedTime
-    // torus.rotation.y = 0.1 * elapsedTime
-
-    // sphere.rotation.x = 0.15 * elapsedTime
-    // // plane.rotation.x = 0.15 * elapsedTime
-    // torus.rotation.x = -0.15 * elapsedTime
-
-
-    // Update controls
-    //controls.update()
-
     // Render
     renderer.render(currentScene, camera)
-    
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
