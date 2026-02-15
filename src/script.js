@@ -302,7 +302,8 @@ let currentScene = scene
 
 
 var inactivityTime = function () {
-    var time
+    var shortTime
+    var longTime
     var loadingTimer = null
     var flagUp = false
     var flagDown = false
@@ -324,7 +325,15 @@ var inactivityTime = function () {
         loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
     }
 
-    function idle() {
+    function shortIdle() {
+        flagUp = false
+        flagDown = false
+        loadingTimer = setInterval(loadingIcon, 1000)
+    }
+
+    function longIdle() {
+        if (loadingTimer) clearInterval(loadingTimer)
+        loadingTimer = null
         curObjectPathInd = 0
         resolutionIndex = 9
         scene.background = idleBackgroundTexture
@@ -335,13 +344,16 @@ var inactivityTime = function () {
     }
 
     function resetTimer() {
-        clearTimeout(time)
+        clearTimeout(shortTime)
+        clearTimeout(longTime)
         if (loadingTimer) clearInterval(loadingTimer)
         loadingTimer = null
         currentScene = scene
-        time = setTimeout(idle, 60000)
+        shortTime = setTimeout(shortIdle, 3000)
+        longTime = setTimeout(longIdle, 60000)
     }
-    time = setTimeout(idle, 60000)
+    shortTime = setTimeout(shortIdle, 3000)
+    longTime = setTimeout(longIdle, 60000)
 };
 
 window.onload = function () {
