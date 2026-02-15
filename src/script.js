@@ -35,8 +35,17 @@ const environmentMapTexture = cubeTextureLoader.load([
 /** Debug: when false, options overlay (keys, triangle count) is hidden */
 const DEBUG = false
 
-/** Preloaded banana background for idle screen (avoids black flash) */
-const idleBackgroundTexture = textureLoader.load('textures/door/back0.jpg')
+/** Model-to-background mapping */
+const backgroundMap = {
+    '/models/Banana/banana': 'textures/door/back1.jpg',
+    '/models/Grape/grape': 'textures/door/back2.jpg',
+    '/models/Mushroom/mush': 'textures/door/back3.jpg',
+    '/models/Apple/apple': 'textures/door/back4.jpg',
+    '/models/Pineapple/pine': 'textures/door/back0.jpg',
+}
+
+/** Preloaded banana background for initial load and idle (avoids black flash) */
+const idleBackgroundTexture = textureLoader.load('textures/door/back1.jpg')
 
 /**
  * Base
@@ -88,8 +97,7 @@ const loadingObjectPath = '/models/Banana/banana'
 const objects = ['/models/Banana/banana', '/models/Apple/apple','/models/Grape/grape','/models/Pineapple/pine','/models/Mushroom/mush']
 let resolutionIndex = '1';
 
-let texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
-//scene.background = texture
+let texture = null
 
 let loadId = 0
 // Generic model loader to avoid repeated code and ensure proper positioning; ignores stale completions to avoid leaks
@@ -148,7 +156,7 @@ window.addEventListener('keydown', (event) =>
     {
         case "KeyA":
             curObjectPathInd = (curObjectPathInd + 1) % objects.length
-            texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
             scene.background = texture
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
@@ -157,6 +165,8 @@ window.addEventListener('keydown', (event) =>
             if (!DEBUG) break
             curObjectPathInd = 1
             curObjectPath = objectBPath
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
+            scene.background = texture
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
@@ -164,6 +174,8 @@ window.addEventListener('keydown', (event) =>
             if (!DEBUG) break
             curObjectPathInd = 4
             curObjectPath = objectCPath
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
+            scene.background = texture
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
@@ -171,6 +183,8 @@ window.addEventListener('keydown', (event) =>
             if (!DEBUG) break
             curObjectPathInd = 2
             curObjectPath = objectDPath
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
+            scene.background = texture
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
@@ -290,16 +304,34 @@ let currentScene = scene
 var inactivityTime = function () {
     var time
     var loadingTimer = null
+    var flagUp = false
+    var flagDown = false
     window.onload = resetTimer
     document.onmousemove = resetTimer
     document.onkeydown = resetTimer
 
+    function loadingIcon() {
+        if (resolutionIndex <= 1) {
+            flagUp = true
+            flagDown = false
+        }
+        if (resolutionIndex >= 9) {
+            flagDown = true
+            flagUp = false
+        }
+        if (flagDown) resolutionIndex -= 1
+        if (flagUp) resolutionIndex += 1
+        loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
+    }
+
     function idle() {
-        disposeMesh(objectA)
-        scene.clear()
         curObjectPathInd = 0
         resolutionIndex = 9
         scene.background = idleBackgroundTexture
+        loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
+        flagUp = false
+        flagDown = false
+        loadingTimer = setInterval(loadingIcon, 1000)
     }
 
     function resetTimer() {
@@ -307,15 +339,15 @@ var inactivityTime = function () {
         if (loadingTimer) clearInterval(loadingTimer)
         loadingTimer = null
         currentScene = scene
-        if (objectA.children.length === 0) loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
-        time = setTimeout(idle, 3000)
+        time = setTimeout(idle, 60000)
     }
-    time = setTimeout(idle, 3000)
+    time = setTimeout(idle, 60000)
 };
 
 window.onload = function () {
     curObjectPathInd = 0
     resolutionIndex = 9
+    scene.background = idleBackgroundTexture
     loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
     inactivityTime()
     if (!DEBUG) {
