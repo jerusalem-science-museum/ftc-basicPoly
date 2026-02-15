@@ -150,9 +150,9 @@ window.addEventListener('keydown', (event) =>
         case "KeyA":
             curObjectPathInd += 1
             curObjectPathInd %= objects.length
-            curObjectPathInd += 1
             texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
             scene.background = texture
+            curObjectPathInd += 1
 
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
