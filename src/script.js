@@ -2,12 +2,8 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { Color, Group, LoadingManager } from 'three'
-import * as dat from 'lil-gui'
 //import * as fs from 'fs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-
-// debug ui
-const gui = new dat.GUI()
 
 // textures
 const textureLoader = new THREE.TextureLoader()
@@ -61,6 +57,17 @@ window.addEventListener('dblclick', () =>
 // Load stl files
 const loader = new STLLoader()
 
+// Helper to dispose geometry and free GPU memory before loading new mesh
+function disposeMesh(group) {
+    group.traverse((child) => {
+        if (child.isMesh) {
+            child.geometry.dispose()
+            if (child.material) child.material.dispose()
+        }
+    })
+    group.clear()
+}
+
 // object groups for each model type and its resolutions
 const objectA = new THREE.Group()
 const objectB = new THREE.Group()
@@ -79,6 +86,45 @@ let resolutionIndex = '1';
 let texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
 //scene.background = texture
 
+// Generic model loader to avoid repeated code and ensure proper positioning
+function loadModel(objectPath, objectIndex, resolution, onLoaded) {
+    loader.load(
+        objectPath + resolution + '.stl',
+        function (geometry) {
+            if (objectPath === '/models/Banana/banana') {
+                geometry.scale(0.01, 0.01, 0.01)
+                geometry.rotateZ(Math.PI / 2)
+                geometry.rotateZ(Math.PI)
+            } else {
+                geometry.rotateX(Math.PI / 2)
+                geometry.rotateX(Math.PI)
+                if (objectPath === '/models/Pineapple/pine' || objectPath === '/models/Mushroom/mush') {
+                    geometry.scale(0.02, 0.02, 0.02)
+                } else {
+                    geometry.scale(0.03, 0.03, 0.03)
+                }
+            }
+            const loadedMesh = new THREE.Mesh(geometry, material)
+            if (objectPath === '/models/Banana/banana') {
+                loadedMesh.position.x = -1
+                loadedMesh.position.z = 0
+            } else if (objectPath === '/models/Pineapple/pine' || objectPath === '/models/Mushroom/mush' || objectPath === '/models/Grape/grape') {
+                loadedMesh.position.z = 1.2
+            } else {
+                loadedMesh.position.z = 0.5
+            }
+            disposeMesh(objectA)
+            objectA.add(loadedMesh)
+            scene.clear()
+            scene.add(objectA)
+            scene.add(camera)
+            if (onLoaded) onLoaded()
+        },
+        (xhr) => { console.log((xhr.loaded / xhr.total) * 100 + '% loaded') },
+        (error) => { console.log(error) }
+    )
+}
+
 // object selection event
 window.addEventListener('keydown', (event) =>
 {
@@ -91,10 +137,10 @@ window.addEventListener('keydown', (event) =>
     {
         case "KeyA":
             curObjectPathInd += 1
-            curObjectPathInd %= (objects.length - 1)
+            curObjectPathInd %= objects.length
+            curObjectPathInd += 1
             texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
             scene.background = texture
-            curObjectPathInd += 1
 
             resolutionIndex = 9
 
@@ -124,7 +170,7 @@ window.addEventListener('keydown', (event) =>
                     {
                         loadedMesh.position.z = 0.5
                     }
-                    objectA.clear()
+                    disposeMesh(objectA)
                     objectA.add(loadedMesh)
                     scene.clear()
                     scene.add(objectA)
@@ -152,7 +198,7 @@ window.addEventListener('keydown', (event) =>
                     const loadedMesh = new THREE.Mesh(geometry, material)
                     loadedMesh.position.z = 0.5
         
-                    objectA.clear()
+                    disposeMesh(objectA)
                     objectA.add(loadedMesh)
                     scene.clear()
                     scene.add(objectA)
@@ -180,7 +226,7 @@ window.addEventListener('keydown', (event) =>
                     const loadedMesh = new THREE.Mesh(geometry, material)
                     loadedMesh.position.z = 1.2
         
-                    objectA.clear()
+                    disposeMesh(objectA)
                     objectA.add(loadedMesh)
                     scene.clear()
                     scene.add(objectA)
@@ -208,7 +254,7 @@ window.addEventListener('keydown', (event) =>
                     const loadedMesh = new THREE.Mesh(geometry, material)
                     loadedMesh.position.z = 1.2
         
-                    objectA.clear()
+                    disposeMesh(objectA)
                     objectA.add(loadedMesh)
                     scene.clear()
                     scene.add(objectA)
@@ -236,7 +282,7 @@ window.addEventListener('keydown', (event) =>
                     const loadedMesh = new THREE.Mesh(geometry, material)
                     loadedMesh.position.z = 0.5
         
-                    objectA.clear()
+                    disposeMesh(objectA)
                     objectA.add(loadedMesh)
                     scene.clear()
                     scene.add(objectA)
@@ -318,9 +364,9 @@ window.addEventListener('keydown', (event) =>
                     loadedMesh.position.z = 0.5
                 }
 
-                objectA.clear()
-                objectB.clear()
-                objectC.clear()
+                disposeMesh(objectA)
+                disposeMesh(objectB)
+                disposeMesh(objectC)
                 objectA.add(loadedMesh)
                 scene.add(objectA)
                 scene.add(camera)
@@ -468,7 +514,7 @@ var inactivityTime = function () {
                 loadedMesh.position.x = -1
                 loadedMesh.position.z = 0
     
-                objectA.clear()
+                disposeMesh(objectA)
                 objectA.add(loadedMesh)                    
                 scene.add(objectA)
                 scene.add(camera)
@@ -484,6 +530,7 @@ var inactivityTime = function () {
         
     function idle() {
         console.log("idle")
+        disposeMesh(objectA)
         scene.clear()
         // currentScene = idleScene
         // curObjectPath = objectEPath
@@ -511,8 +558,12 @@ var inactivityTime = function () {
 };
 
 window.onload = function() {
+    // Load banana immediately on startup to avoid black screen
+    curObjectPathInd = 0
+    resolutionIndex = 9
+    loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
     inactivityTime();
-  }
+}
 
 /**
  * Renderer
@@ -552,3 +603,4 @@ const tick = () =>
 }
 
 tick()
+
