@@ -84,9 +84,8 @@ const objectAPath = '/models/Pineapple/pine';
 const objectBPath = '/models/Apple/apple';
 const objectCPath = '/models/Mushroom/mush';
 const objectDPath = '/models/Grape/grape';
-const objectEPath = '/models/Straw/straw';
 const loadingObjectPath = '/models/Banana/banana'
-const objects = ['/models/Banana/banana', '/models/Apple/apple','/models/Grape/grape','/models/Pineapple/pine','/models/Mushroom/mush','/models/Straw/straw']
+const objects = ['/models/Banana/banana', '/models/Apple/apple','/models/Grape/grape','/models/Pineapple/pine','/models/Mushroom/mush']
 let resolutionIndex = '1';
 
 let texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
@@ -148,36 +147,30 @@ window.addEventListener('keydown', (event) =>
     switch(event.code)
     {
         case "KeyA":
-            curObjectPathInd += 1
-            curObjectPathInd %= objects.length
+            curObjectPathInd = (curObjectPathInd + 1) % objects.length
             texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
             scene.background = texture
-            curObjectPathInd += 1
-
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
         case "KeyB":
+            if (!DEBUG) break
             curObjectPathInd = 1
             curObjectPath = objectBPath
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
         case "KeyC":
+            if (!DEBUG) break
             curObjectPathInd = 4
             curObjectPath = objectCPath
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
         case "KeyD":
+            if (!DEBUG) break
             curObjectPathInd = 2
             curObjectPath = objectDPath
-            resolutionIndex = 9
-            loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
-            break; 
-        case "KeyE":
-            curObjectPathInd = 5
-            curObjectPath = objectEPath
             resolutionIndex = 9
             loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
@@ -327,9 +320,7 @@ window.onload = function () {
     inactivityTime()
     if (!DEBUG) {
         const info = document.getElementById('info')
-        const kofi = document.getElementById('kofi')
         if (info) info.style.display = 'none'
-        if (kofi) kofi.style.display = 'none'
     }
 }
 
@@ -349,7 +340,7 @@ const clock = new THREE.Clock()
 
 const tick = () =>
 {
-    if (DEBUG && scene.children.length > 1) {
+    if (scene.children.length > 1) {
         const el = document.getElementById('currentTri')
         if (el) el.innerHTML = Math.ceil((currentScene.children[0].children[0].geometry.attributes.normal.count / 3) / 3)
     }
