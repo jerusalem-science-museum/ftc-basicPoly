@@ -28,7 +28,11 @@ nvm install --lts
 nvm use --lts
 
 echo "=== Installing pm2 globally ==="
-npm install -g pm2
+if command -v pm2 &>/dev/null; then
+  echo "pm2 already installed, skipping."
+else
+  npm install -g pm2
+fi
 
 echo "=== Installing project dependencies ==="
 npm install
