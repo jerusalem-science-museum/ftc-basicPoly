@@ -2,12 +2,8 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { Color, Group, LoadingManager } from 'three'
-import * as dat from 'lil-gui'
 //import * as fs from 'fs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-
-// debug ui
-const gui = new dat.GUI()
 
 // textures
 const textureLoader = new THREE.TextureLoader()
@@ -36,6 +32,21 @@ const environmentMapTexture = cubeTextureLoader.load([
     '/textures/environmentMaps/0/nz.jpg'
 ])
 
+/** Debug: when false, options overlay (keys, triangle count) is hidden */
+const DEBUG = false
+
+/** Model-to-background mapping */
+const backgroundMap = {
+    '/models/Banana/banana': 'textures/door/back1.jpg',
+    '/models/Grape/grape': 'textures/door/back2.jpg',
+    '/models/Mushroom/mush': 'textures/door/back3.jpg',
+    '/models/Apple/apple': 'textures/door/back4.jpg',
+    '/models/Pineapple/pine': 'textures/door/back0.jpg',
+}
+
+/** Preloaded banana background for initial load and idle (avoids black flash) */
+const idleBackgroundTexture = textureLoader.load('textures/door/back1.jpg')
+
 /**
  * Base
  */
@@ -61,6 +72,17 @@ window.addEventListener('dblclick', () =>
 // Load stl files
 const loader = new STLLoader()
 
+// Helper to dispose geometry and free GPU memory before loading new mesh
+function disposeMesh(group) {
+    group.traverse((child) => {
+        if (child.isMesh) {
+            child.geometry.dispose()
+            if (child.material) child.material.dispose()
+        }
+    })
+    group.clear()
+}
+
 // object groups for each model type and its resolutions
 const objectA = new THREE.Group()
 const objectB = new THREE.Group()
@@ -71,13 +93,56 @@ const objectAPath = '/models/Pineapple/pine';
 const objectBPath = '/models/Apple/apple';
 const objectCPath = '/models/Mushroom/mush';
 const objectDPath = '/models/Grape/grape';
-const objectEPath = '/models/Straw/straw';
 const loadingObjectPath = '/models/Banana/banana'
-const objects = ['/models/Banana/banana', '/models/Apple/apple','/models/Grape/grape','/models/Pineapple/pine','/models/Mushroom/mush','/models/Straw/straw']
+const objects = ['/models/Banana/banana', '/models/Apple/apple','/models/Grape/grape','/models/Pineapple/pine','/models/Mushroom/mush']
 let resolutionIndex = '1';
 
-let texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
-//scene.background = texture
+let texture = null
+
+let loadId = 0
+// Generic model loader to avoid repeated code and ensure proper positioning; ignores stale completions to avoid leaks
+function loadModel(objectPath, objectIndex, resolution, onLoaded) {
+    const thisLoadId = ++loadId
+    loader.load(
+        objectPath + resolution + '.stl',
+        function (geometry) {
+            if (thisLoadId !== loadId) {
+                geometry.dispose()
+                return
+            }
+            if (objectPath === '/models/Banana/banana') {
+                geometry.scale(0.01, 0.01, 0.01)
+                geometry.rotateZ(Math.PI / 2)
+                geometry.rotateZ(Math.PI)
+            } else {
+                geometry.rotateX(Math.PI / 2)
+                geometry.rotateX(Math.PI)
+                if (objectPath === '/models/Pineapple/pine' || objectPath === '/models/Mushroom/mush') {
+                    geometry.scale(0.02, 0.02, 0.02)
+                } else {
+                    geometry.scale(0.03, 0.03, 0.03)
+                }
+            }
+            const loadedMesh = new THREE.Mesh(geometry, material)
+            if (objectPath === '/models/Banana/banana') {
+                loadedMesh.position.x = -1
+                loadedMesh.position.z = 0
+            } else if (objectPath === '/models/Pineapple/pine' || objectPath === '/models/Mushroom/mush' || objectPath === '/models/Grape/grape') {
+                loadedMesh.position.z = 1.2
+            } else {
+                loadedMesh.position.z = 0.5
+            }
+            disposeMesh(objectA)
+            objectA.add(loadedMesh)
+            scene.clear()
+            scene.add(objectA)
+            scene.add(camera)
+            if (onLoaded) onLoaded()
+        },
+        (xhr) => { console.log((xhr.loaded / xhr.total) * 100 + '% loaded') },
+        (error) => { console.log(error) }
+    )
+}
 
 // object selection event
 window.addEventListener('keydown', (event) =>
@@ -90,165 +155,38 @@ window.addEventListener('keydown', (event) =>
     switch(event.code)
     {
         case "KeyA":
-            curObjectPathInd += 1
-            curObjectPathInd %= (objects.length - 1)
-            texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
+            curObjectPathInd = (curObjectPathInd + 1) % objects.length
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
             scene.background = texture
-            curObjectPathInd += 1
-
             resolutionIndex = 9
-
-            loader.load(
-                objects[curObjectPathInd] + resolutionIndex + '.stl',
-                
-                function (geometry) { 
-                    
-                    geometry.rotateX(Math.PI / 2)
-                    geometry.rotateX(Math.PI)                
-                    if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush')
-                    {
-                        geometry.scale(0.02, 0.02, 0.02)
-                    }
-                    else
-                    {
-                        geometry.scale(0.03, 0.03, 0.03)
-                    }
-
-                    const loadedMesh = new THREE.Mesh(geometry, material)
-                    if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush'
-                    || objects[curObjectPathInd] == '/models/Grape/grape')
-                    {
-                        loadedMesh.position.z = 1.2
-                    }
-                    else
-                    {
-                        loadedMesh.position.z = 0.5
-                    }
-                    objectA.clear()
-                    objectA.add(loadedMesh)
-                    scene.clear()
-                    scene.add(objectA)
-                    scene.add(camera)
-                },
-                (xhr) => {
-                    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-                },
-                (error) => {
-                    console.log(error)
-                }
-            )
+            loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
         case "KeyB":
+            if (!DEBUG) break
+            curObjectPathInd = 1
             curObjectPath = objectBPath
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
+            scene.background = texture
             resolutionIndex = 9
-            loader.load(
-                curObjectPath + resolutionIndex + '.stl',
-                function (geometry) { 
-                    geometry.scale(0.03, 0.03, 0.03)
-                    geometry.rotateX(Math.PI / 2)
-                    geometry.rotateX(Math.PI)
-                    
-                    // orientate the object
-                    const loadedMesh = new THREE.Mesh(geometry, material)
-                    loadedMesh.position.z = 0.5
-        
-                    objectA.clear()
-                    objectA.add(loadedMesh)
-                    scene.clear()
-                    scene.add(objectA)
-                    scene.add(camera)
-                },
-                (xhr) => {
-                    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-                },
-                (error) => {
-                    console.log(error)
-                }
-            )
+            loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
         case "KeyC":
+            if (!DEBUG) break
+            curObjectPathInd = 4
             curObjectPath = objectCPath
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
+            scene.background = texture
             resolutionIndex = 9
-            loader.load(
-                curObjectPath + resolutionIndex + '.stl',
-                function (geometry) { 
-                    geometry.scale(0.025, 0.025, 0.025)
-                    geometry.rotateX(Math.PI / 2)
-                    geometry.rotateX(Math.PI)
-                    
-                    // orientate the object
-                    const loadedMesh = new THREE.Mesh(geometry, material)
-                    loadedMesh.position.z = 1.2
-        
-                    objectA.clear()
-                    objectA.add(loadedMesh)
-                    scene.clear()
-                    scene.add(objectA)
-                    scene.add(camera)
-                },
-                (xhr) => {
-                    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-                },
-                (error) => {
-                    console.log(error)
-                }
-            )
+            loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
         case "KeyD":
+            if (!DEBUG) break
+            curObjectPathInd = 2
             curObjectPath = objectDPath
+            texture = new THREE.TextureLoader().load(backgroundMap[objects[curObjectPathInd]])
+            scene.background = texture
             resolutionIndex = 9
-            loader.load(
-                curObjectPath + resolutionIndex + '.stl',
-                function (geometry) { 
-                    geometry.scale(0.03, 0.03, 0.03)
-                    geometry.rotateX(Math.PI / 2)
-                    geometry.rotateX(Math.PI)
-                    
-                    // orientate the object
-                    const loadedMesh = new THREE.Mesh(geometry, material)
-                    loadedMesh.position.z = 1.2
-        
-                    objectA.clear()
-                    objectA.add(loadedMesh)
-                    scene.clear()
-                    scene.add(objectA)
-                    scene.add(camera)
-                },
-                (xhr) => {
-                    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-                },
-                (error) => {
-                    console.log(error)
-                }
-            )
-            break; 
-        case "KeyE":
-            curObjectPath = objectEPath
-            resolutionIndex = 9
-            loader.load(
-                curObjectPath + resolutionIndex + '.stl',
-                function (geometry) { 
-                    geometry.scale(0.03, 0.03, 0.03)
-                    geometry.rotateX(Math.PI / 2)
-                    geometry.rotateX(Math.PI)
-                    
-                    // orientate the object
-                    const loadedMesh = new THREE.Mesh(geometry, material)
-                    loadedMesh.position.z = 0.5
-        
-                    objectA.clear()
-                    objectA.add(loadedMesh)
-                    scene.clear()
-                    scene.add(objectA)
-                    scene.add(camera)
-                },
-                (xhr) => {
-                    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-                },
-                (error) => {
-                    console.log(error)
-                }
-            )
+            loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
             break; 
     }
 })
@@ -276,63 +214,7 @@ window.addEventListener('keydown', (event) =>
         {
            resolutionIndex += 1
         }
-        
-        loader.load(
-            objects[curObjectPathInd] + resolutionIndex + '.stl',
-            function (geometry) {   
-                // orient object
-                
-                if (objects[curObjectPathInd] == '/models/Banana/banana')
-                {
-                    geometry.scale(0.01, 0.01, 0.01)
-                    geometry.rotateZ(Math.PI / 2)
-                    geometry.rotateZ(Math.PI)
-                }
-                else
-                {
-                    geometry.rotateX(Math.PI / 2)
-                    geometry.rotateX(Math.PI)
-                    if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush')
-                    {
-                        geometry.scale(0.02, 0.02, 0.02)
-                    }
-                    else
-                    {
-                        geometry.scale(0.03, 0.03, 0.03)
-                    }
-                }
-
-                const loadedMesh = new THREE.Mesh(geometry, material)
-                if (objects[curObjectPathInd] == '/models/Banana/banana')
-                {
-                    loadedMesh.position.x = -1
-                    loadedMesh.position.z = 0
-                }
-                else if (objects[curObjectPathInd] == '/models/Pineapple/pine' || objects[curObjectPathInd] == '/models/Mushroom/mush'
-                 || objects[curObjectPathInd] == '/models/Grape/grape')
-                {
-                    loadedMesh.position.z = 1.2
-                }
-                else
-                {
-                    loadedMesh.position.z = 0.5
-                }
-
-                objectA.clear()
-                objectB.clear()
-                objectC.clear()
-                objectA.add(loadedMesh)
-                scene.add(objectA)
-                scene.add(camera)
-                console.log(scene.children[0].children[0].geometry.attributes.normal.count)
-            },
-            (xhr) => {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-            },
-            (error) => {
-                console.log(error)
-            }
-        )
+        loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
     }
 })
 
@@ -420,99 +302,71 @@ let currentScene = scene
 
 
 var inactivityTime = function () {
-    console.log("hello")
-    var time;
-    window.onload = resetTimer;
-    // DOM Events
-    document.onmousemove = resetTimer;
-    document.onkeydown = resetTimer;
-
+    var shortTime
+    var longTime
+    var loadingTimer = null
     var flagUp = false
     var flagDown = false
-    var loadingTimer = setInterval(loadingIcon, 1000)  
-    resolutionIndex = 9
+    window.onload = resetTimer
+    document.onmousemove = resetTimer
+    document.onkeydown = resetTimer
 
     function loadingIcon() {
-        if (resolutionIndex == 1)
-        {
+        if (resolutionIndex <= 1) {
             flagUp = true
             flagDown = false
         }
-        if (resolutionIndex == 9)
-        {
+        if (resolutionIndex >= 9) {
             flagDown = true
             flagUp = false
         }
-        if (flagDown)
-        {
-            resolutionIndex -= 1
-        }
-        if (flagUp)
-        {
-            resolutionIndex += 1
-        }
-        curObjectPathInd = 0
-        // texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
-        // scene.background = texture
-        console.log(resolutionIndex)
-        loader.load(
-            
-            objects[curObjectPathInd] + resolutionIndex + '.stl',
-            function (geometry) { 
-                geometry.scale(0.01, 0.01, 0.01)
-                geometry.rotateZ(Math.PI / 2)
-                geometry.rotateZ(Math.PI)
-                
-                // orientate the object
-                const loadedMesh = new THREE.Mesh(geometry, material)
-                loadedMesh.position.x = -1
-                loadedMesh.position.z = 0
-    
-                objectA.clear()
-                objectA.add(loadedMesh)                    
-                scene.add(objectA)
-                scene.add(camera)
-            },
-            (xhr) => {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-            },
-            (error) => {
-                console.log(error)
-            }
-        )
+        if (flagDown) resolutionIndex -= 1
+        if (flagUp) resolutionIndex += 1
+        loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
     }
-        
-    function idle() {
-        console.log("idle")
-        scene.clear()
-        // currentScene = idleScene
-        // curObjectPath = objectEPath
+
+    function shortIdle() {
+        flagUp = false
+        flagDown = false
+        loadingTimer = setInterval(loadingIcon, 1000)
+    }
+
+    function longIdle() {
+        if (loadingTimer) clearInterval(loadingTimer)
+        loadingTimer = null
         curObjectPathInd = 0
         resolutionIndex = 9
-        texture = new THREE.TextureLoader().load( 'textures/door/back' + curObjectPathInd + '.jpg');
-        scene.background = texture
-        loadingTimer = setInterval(loadingIcon, 1000)  
-          
-        
+        scene.background = idleBackgroundTexture
+        loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
+        flagUp = false
+        flagDown = false
+        loadingTimer = setInterval(loadingIcon, 1000)
     }
 
     function resetTimer() {
-        console.log("reset")
-        clearTimeout(time);
-        clearInterval(loadingTimer)
+        clearTimeout(shortTime)
+        clearTimeout(longTime)
+        if (loadingTimer) clearInterval(loadingTimer)
+        loadingTimer = null
         currentScene = scene
-        let firstTimeout = true
-        
-
-        time = setTimeout(idle, 3000)
-
-        // 1000 milliseconds = 1 second
+        shortTime = setTimeout(shortIdle, 3000)
+        longTime = setTimeout(longIdle, 60000)
     }
+    shortTime = setTimeout(shortIdle, 3000)
+    longTime = setTimeout(longIdle, 60000)
 };
 
-window.onload = function() {
-    inactivityTime();
-  }
+window.onload = function () {
+    curObjectPathInd = 0
+    resolutionIndex = 9
+    scene.background = idleBackgroundTexture
+    loadModel(objects[curObjectPathInd], curObjectPathInd, resolutionIndex)
+    inactivityTime()
+    if (!DEBUG) {
+        const info = document.getElementById('info')
+        if (info) info.style.display = 'none'
+    }
+}
 
 /**
  * Renderer
@@ -530,10 +384,9 @@ const clock = new THREE.Clock()
 
 const tick = () =>
 {
-    if (scene.children.length > 1)
-    {    
-        console.log(scene.children[0].children[0].geometry.attributes.normal.count)
-        document.getElementById("currentTri").innerHTML = Math.ceil((currentScene.children[0].children[0].geometry.attributes.normal.count / 3) / 3);
+    if (scene.children.length > 1) {
+        const el = document.getElementById('currentTri')
+        if (el) el.innerHTML = Math.ceil((currentScene.children[0].children[0].geometry.attributes.normal.count / 3) / 3)
     }
           
     
@@ -552,3 +405,4 @@ const tick = () =>
 }
 
 tick()
+
