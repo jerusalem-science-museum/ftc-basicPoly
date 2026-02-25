@@ -61,6 +61,9 @@ chromium \
   --noerrdialogs \
   --disable-infobars \
   --no-first-run \
+  --ignore-gpu-blocklist \
+  --enable-gpu \
+  --enable-webgl \
   --disable-features=MediaSessionService,HardwareMediaKeyHandling \
   --password-store=basic \
   --use-mock-keychain \

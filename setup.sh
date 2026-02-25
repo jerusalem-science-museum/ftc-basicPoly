@@ -51,7 +51,7 @@ cat > "$AUTOSTART_DIR/ftc-basicPoly.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=FTC BasicPoly Exhibit
-Exec=bash $RUN_SH
+Exec=xterm -hold -e bash $RUN_SH
 X-GNOME-Autostart-enabled=true
 EOF
 
