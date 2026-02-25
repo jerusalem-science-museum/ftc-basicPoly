@@ -34,9 +34,11 @@ echo "=== Installing project dependencies ==="
 npm install
 
 echo "=== Configuring pm2 startup ==="
-pm2 startup
-echo "If the above printed a sudo command, run it now in another terminal, then press Enter."
-read -p "Press Enter to continue..."
+STARTUP_CMD=$(pm2 startup | grep "sudo" | tail -1)
+if [ -n "$STARTUP_CMD" ]; then
+  echo "Running: $STARTUP_CMD"
+  eval "$STARTUP_CMD"
+fi
 
 echo "=== Setting up autostart ==="
 AUTOSTART_DIR="$HOME/.config/autostart"
