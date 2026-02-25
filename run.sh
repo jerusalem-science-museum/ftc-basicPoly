@@ -23,7 +23,8 @@ echo "node: $(which node 2>/dev/null || echo 'NOT FOUND')"
 echo "npm: $(which npm 2>/dev/null || echo 'NOT FOUND')"
 echo "pm2: $(which pm2 2>/dev/null || echo 'NOT FOUND')"
 
-cd ~/Documents/ftc-basicPoly
+SCRIPT_DIR=$(dirname "$0")
+cd "$SCRIPT_DIR"
 
 # Build only if dist doesn't exist or source files are newer than dist
 if [ ! -d "dist" ] || [ "$(find src -newer dist -type f 2>/dev/null | head -1)" ]; then
